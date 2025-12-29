@@ -1,90 +1,36 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class Symbol_files {
+public class Main {
     public static void main(String[] args) {
-        String fileName = "24_demo.txt";
-
         try {
-            String content = readFile(fileName);
+            // Читаем всё содержимое файла в строку
+            String text = Files.readString(Paths.get("24_demo (1).txt"));
 
-            // Проверяем, что файл содержит только символы X, Y, Z
-            if (!isValidContent(content)) {
-                throw new IllegalArgumentException("Файл содержит недопустимые символы. Разрешены только X, Y, Z.");
-            }
+            // Задаем шаблон: ищем иксы (X), один или много подряд
+            Pattern p = Pattern.compile("X+");
+            Matcher m = p.matcher(text);
 
-            Result result = findMaxConsecutiveDifferentCharsDetailed(content);
-
-            System.out.println("Максимальная длина последовательности: " + result.maxLength);
-            System.out.println("Начальная позиция: " + result.startIndex);
-            System.out.println("Последовательность: " +
-                    (result.maxLength <= 100 ?
-                            content.substring(result.startIndex, result.startIndex + result.maxLength) :
-                            "слишком длинная для отображения"));
-        } catch (IOException e) {
-            System.err.println("Ошибка при чтении файла: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.err.println(e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Произошла непредвиденная ошибка: " + e.getMessage());
-        }
-    }
-
-    private static String readFile(String fileName) throws IOException {
-        StringBuilder content = new StringBuilder();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line);
-            }
-        }
-
-        if (content.length() == 0) {
-            throw new IOException("Файл пуст");
-        }
-
-        return content.toString();
-    }
-
-    private static boolean isValidContent(String content) {
-        return content.matches("[XYZ]+");
-    }
-
-    private static Result findMaxConsecutiveDifferentCharsDetailed(String s) {
-        if (s == null || s.isEmpty()) {
-            return new Result(0, 0);
-        }
-
-        int maxLength = 1;
-        int currentLength = 1;
-        int maxStart = 0;
-        int currentStart = 0;
-
-        for (int i = 1; i < s.length(); i++) {
-            if (s.charAt(i) != s.charAt(i - 1)) {
-                currentLength++;
-                if (currentLength > maxLength) {
-                    maxLength = currentLength;
-                    maxStart = currentStart;
+            int max = 0;
+            
+            // Пробегаем по всем найденным местам
+            while (m.find()) {
+                // Считаем длину (конец минус начало)
+                int len = m.end() - m.start();
+                
+                // Если текущая цепочка больше рекорда, обновляем
+                if (len > max) {
+                    max = len;
                 }
-            } else {
-                currentLength = 1;
-                currentStart = i;
             }
-        }
 
-        return new Result(maxLength, maxStart);
-    }
+            System.out.println("Максимальная цепочка X: " + max);
 
-    static class Result {
-        int maxLength;
-        int startIndex;
-
-        Result(int maxLength, int startIndex) {
-            this.maxLength = maxLength;
-            this.startIndex = startIndex;
+        } catch (IOException ex) {
+            System.out.println("Что-то пошло не так с файлом: " + ex.getMessage());
         }
     }
 }
